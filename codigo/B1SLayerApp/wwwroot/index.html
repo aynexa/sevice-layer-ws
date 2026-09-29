@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Taller Service Layer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="barra">
+    <div>
+      <p class="marca">Taller SAP Business One</p>
+      <h1>Service Layer en el navegador</h1>
+    </div>
+    <p class="estado" id="estado-sesion">Sin sesión</p>
+  </header>
+
+  <main>
+    <p class="aviso" id="aviso-api" hidden></p>
+    <section class="recorrido" aria-label="Recorrido de una consulta">
+      <ol>
+        <li><span>1</span>Navegador</li>
+        <li><span>2</span>HTML + JS</li>
+        <li><span>3</span>Minimal API</li>
+        <li><span>4</span>B1SLayer</li>
+        <li><span>5</span>SAP B1</li>
+      </ol>
+      <p>La página no llama a SAP. Llama a esta misma aplicación y el servidor, con B1SLayer, habla con Service Layer.</p>
+    </section>
+
+    <section class="tarjeta">
+      <header>
+        <p class="paso">Paso 1</p>
+        <h2>Abrir sesión</h2>
+      </header>
+      <p class="ayuda">Igual que <code>LoginAsync()</code> en la consola. La contraseña se queda en <code>appsettings.json</code>, en el servidor.</p>
+      <button type="button" id="btn-sesion">Iniciar sesión</button>
+      <dl class="datos" id="datos-sesion" hidden>
+        <div><dt>Usuario</dt><dd id="sesion-usuario"></dd></div>
+        <div><dt>CompanyDB</dt><dd id="sesion-company"></dd></div>
+        <div><dt>Service Layer</dt><dd id="sesion-url"></dd></div>
+        <div><dt>SessionId</dt><dd id="sesion-id" class="mono"></dd></div>
+      </dl>
+      <p class="error" id="error-sesion" hidden></p>
+    </section>
+
+    <section class="tarjeta">
+      <header>
+        <p class="paso">Paso 2</p>
+        <h2>Leer una orden de venta</h2>
+      </header>
+      <p class="ayuda">Igual que <code>Request("Orders", docEntry).GetAsync()</code>. En la consola el DocEntry estaba fijo en 50528.</p>
+      <form id="form-orden">
+        <label for="doc-entry">DocEntry</label>
+        <input id="doc-entry" name="docEntry" type="number" min="1" value="50528" required />
+        <button type="submit">Consultar orden</button>
+      </form>
+      <p class="recurso" id="recurso-orden" hidden></p>
+      <dl class="datos" id="datos-orden" hidden></dl>
+      <p class="error" id="error-orden" hidden></p>
+    </section>
+
+    <section class="tarjeta">
+      <header>
+        <p class="paso">Paso 3</p>
+        <h2>Listar clientes</h2>
+      </header>
+      <p class="ayuda">La consola pedía esta lista y no la mostraba. Aquí se ve el resultado del <code>Filter</code>, <code>Select</code>, <code>OrderBy</code> y <code>WithPageSize</code>.</p>
+      <form id="form-socios">
+        <label for="tamano">Socios por página</label>
+        <input id="tamano" name="tamano" type="number" min="1" max="100" value="50" required />
+        <button type="submit">Consultar clientes</button>
+      </form>
+      <p class="recurso" id="recurso-socios" hidden></p>
+      <div class="tabla-wrap" id="wrap-socios" hidden>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Código</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">RUC</th>
+              <th scope="col">Correo</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpo-socios"></tbody>
+        </table>
+      </div>
+      <p class="vacio" id="vacio-socios" hidden>Service Layer no devolvió clientes con ese filtro.</p>
+      <p class="error" id="error-socios" hidden></p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

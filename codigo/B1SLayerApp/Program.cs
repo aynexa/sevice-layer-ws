@@ -1,52 +1,72 @@
 using B1SLayer;
-using B1SLayerApp.Modelos;
+using B1SLayerApp.Servicios;
 
-var serviceLayerUrl = "https://192.168.1.14:50000/b1s/v1";
-var userName = "dev";
-var password = "sbosap";
-var companyDb = "B1H_LAZZOS_PROD2503";
+var builder = WebApplication.CreateBuilder(args);
 
-try
+builder.Services.Configure<ConexionSapOptions>(builder.Configuration.GetSection("Sap"));
+builder.Services.AddSingleton<ServicioSap>();
+builder.Services.AddCors(opciones =>
+    opciones.AddDefaultPolicy(politica => politica.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
+var app = builder.Build();
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.UseCors();
+
+app.MapGet("/api/salud", () => Results.Ok(new { ok = true }));
+
+app.MapGet("/api/sesion", async (ServicioSap sap) =>
 {
-    var connection = new SLConnection(serviceLayerUrl, companyDb, userName, password);
-    await connection.LoginAsync();
-
-    var sessionId = connection.LoginResponse?.SessionId;
-    if (string.IsNullOrWhiteSpace(sessionId))
+    try
     {
-        Console.WriteLine("Error: Service Layer no devolvió un SessionId.");
-        return;
+        return Results.Ok(await sap.AsegurarSesionAsync());
     }
+    catch (Exception ex)
+    {
+        return ErrorSap(ex);
+    }
+});
 
-    Console.WriteLine($"Session ID: {sessionId}");
-    Console.WriteLine($"¡Bienvenido, {userName}!");
-
-    // Obtener una orden de venta específica (por ejemplo, DocEntry = 50528)
-    var order = await connection.Request("Orders", 50528).GetAsync<OrdersSAPB1>();
-
-    Console.WriteLine($"DocEntry: {order.DocEntry}");
-    Console.WriteLine($"DocNum: {order.DocNum}");
-    Console.WriteLine($"CardCode: {order.CardCode}");
-    Console.WriteLine($"CardName: {order.CardName}");
-
-    // Obtener una lista de socios de negocio con filtro, selección y ordenamiento
-
-    var bpList = await connection.Request("BusinessPartners")
-    .Filter("CardType eq 'cCustomer'")
-    .Select("CardCode, CardName, CardType, FederalTaxID, EmailAddress")
-    .OrderBy("CardName")
-    .WithPageSize(50)
-    .WithCaseInsensitive()
-    .GetAsync<List<BusinessPartnersSAPB1>>();
-
-    Console.ReadLine();
-}
-catch (SLException ex)
+app.MapGet("/api/ordenes/{docEntry:int}", async (int docEntry, ServicioSap sap) =>
 {
-    var message = ex.ErrorDetails?.Message?.Value;
-    Console.WriteLine($"Error: {(string.IsNullOrWhiteSpace(message) ? ex.Message : message)}");
-}
-catch (Exception ex)
+    try
+    {
+        return Results.Ok(await sap.ObtenerOrdenAsync(docEntry));
+    }
+    catch (Exception ex)
+    {
+        return ErrorSap(ex);
+    }
+});
+
+app.MapGet("/api/socios", async (int? tamano, ServicioSap sap) =>
 {
-    Console.WriteLine($"Error: {ex.Message}");
+    try
+    {
+        return Results.Ok(await sap.ObtenerClientesAsync(tamano ?? 50));
+    }
+    catch (Exception ex)
+    {
+        return ErrorSap(ex);
+    }
+});
+
+app.Run();
+
+static IResult ErrorSap(Exception ex)
+{
+    var message = ex switch
+    {
+        SLException sl => string.IsNullOrWhiteSpace(sl.ErrorDetails?.Message?.Value)
+            ? sl.Message
+            : sl.ErrorDetails.Message.Value,
+        _ => ex.Message
+    };
+
+    var status = ex is ArgumentException
+        ? StatusCodes.Status400BadRequest
+        : StatusCodes.Status502BadGateway;
+
+    return Results.Json(new { error = message }, statusCode: status);
 }
