@@ -63,6 +63,35 @@
     <section class="tarjeta">
       <header>
         <p class="paso">Paso 3</p>
+        <h2>Crear un pedido de venta</h2>
+      </header>
+      <p class="ayuda">Igual que <code>Request("Orders").PostAsync()</code>. El pedido sale con un solo artículo.</p>
+      <form id="form-pedido" class="form-pedido">
+        <label for="card-code">Cliente
+          <input id="card-code" name="cardCode" value="C000001" required />
+        </label>
+        <label for="doc-due-date">Fecha de entrega
+          <input id="doc-due-date" name="docDueDate" type="date" value="2026-09-30" required />
+        </label>
+        <label for="item-code">Artículo
+          <input id="item-code" name="itemCode" value="ITEM000001" required />
+        </label>
+        <label for="quantity">Cantidad
+          <input id="quantity" name="quantity" type="number" min="0.01" step="0.01" value="10" required />
+        </label>
+        <label for="unit-price">Precio
+          <input id="unit-price" name="unitPrice" type="number" min="0" step="0.01" value="15.00" required />
+        </label>
+        <button type="submit">Crear pedido</button>
+      </form>
+      <p class="recurso" id="recurso-pedido" hidden></p>
+      <dl class="datos" id="datos-pedido" hidden></dl>
+      <p class="error" id="error-pedido" hidden></p>
+    </section>
+
+    <section class="tarjeta">
+      <header>
+        <p class="paso">Paso 4</p>
         <h2>Listar clientes</h2>
       </header>
       <p class="ayuda">La consola pedía esta lista y no la mostraba. Aquí se ve el resultado del <code>Filter</code>, <code>Select</code>, <code>OrderBy</code> y <code>WithPageSize</code>.</p>

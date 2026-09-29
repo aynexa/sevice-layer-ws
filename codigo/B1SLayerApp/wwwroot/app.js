@@ -28,7 +28,7 @@ function ocupar(boton, ocupado) {
 async function leerJson(respuesta) {
   const cuerpo = await respuesta.json().catch(() => ({}));
   if (!respuesta.ok) {
-    throw new Error(cuerpo.error || "No se pudo completar la consulta.");
+    throw new Error(cuerpo.error || "No se pudo completar la operación.");
   }
   return cuerpo;
 }
@@ -72,7 +72,7 @@ function tipoSocio(valor) {
   return texto(valor);
 }
 
-function pintarOrden(consulta) {
+function pintarOrden(consulta, ids = { datos: "#datos-orden", recurso: "#recurso-orden" }) {
   const orden = consulta.orden;
   const campos = [
     ["DocEntry", orden.docEntry],
@@ -88,7 +88,7 @@ function pintarOrden(consulta) {
     ["Comentarios", texto(orden.comments)]
   ];
 
-  const lista = document.querySelector("#datos-orden");
+  const lista = document.querySelector(ids.datos);
   lista.replaceChildren();
   for (const [titulo, valor] of campos) {
     const bloque = document.createElement("div");
@@ -100,7 +100,7 @@ function pintarOrden(consulta) {
     lista.append(bloque);
   }
   lista.hidden = false;
-  const recurso = document.querySelector("#recurso-orden");
+  const recurso = document.querySelector(ids.recurso);
   recurso.hidden = false;
   recurso.textContent = `${consulta.metodo} ${consulta.recurso}`;
 }
@@ -126,11 +126,11 @@ function pintarSocios(consulta) {
   recurso.textContent = `${consulta.metodo} ${consulta.recurso}\n${consulta.encabezado}`;
 }
 
-async function consultar(ruta) {
+async function llamar(ruta, opciones) {
   let ultimoError;
   for (const base of basesApi()) {
     try {
-      return await leerJson(await fetch(`${base}${ruta}`));
+      return await leerJson(await fetch(`${base}${ruta}`, opciones));
     } catch (error) {
       ultimoError = error;
       if (!(error instanceof TypeError))
@@ -138,6 +138,18 @@ async function consultar(ruta) {
     }
   }
   throw new Error(mensajeDeRed(ultimoError));
+}
+
+function consultar(ruta) {
+  return llamar(ruta);
+}
+
+function enviar(ruta, cuerpo) {
+  return llamar(ruta, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(cuerpo)
+  });
 }
 
 consultar("/api/salud").catch((error) => {
@@ -172,6 +184,34 @@ document.querySelector("#form-orden").addEventListener("submit", async (evento) 
     document.querySelector("#datos-orden").hidden = true;
     document.querySelector("#recurso-orden").hidden = true;
     mostrarError("#error-orden", mensajeDeRed(error));
+  } finally {
+    ocupar(boton, false);
+  }
+});
+
+document.querySelector("#form-pedido").addEventListener("submit", async (evento) => {
+  evento.preventDefault();
+  const boton = evento.currentTarget.querySelector("button");
+  ocupar(boton, true);
+  mostrarError("#error-pedido", "");
+  const pedido = {
+    cardCode: document.querySelector("#card-code").value,
+    docDueDate: document.querySelector("#doc-due-date").value,
+    documentLines: [
+      {
+        itemCode: document.querySelector("#item-code").value,
+        quantity: Number(document.querySelector("#quantity").value),
+        unitPrice: Number(document.querySelector("#unit-price").value)
+      }
+    ]
+  };
+  try {
+    const consulta = await enviar("/api/ordenes", pedido);
+    pintarOrden(consulta, { datos: "#datos-pedido", recurso: "#recurso-pedido" });
+  } catch (error) {
+    document.querySelector("#datos-pedido").hidden = true;
+    document.querySelector("#recurso-pedido").hidden = true;
+    mostrarError("#error-pedido", mensajeDeRed(error));
   } finally {
     ocupar(boton, false);
   }

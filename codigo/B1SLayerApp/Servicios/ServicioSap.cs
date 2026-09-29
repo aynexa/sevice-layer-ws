@@ -90,6 +90,42 @@ public sealed class ServicioSap
         return new ConsultaOrden("GET", $"Orders({docEntry})", orden);
     }
 
+    public async Task<ConsultaOrden> CrearOrdenAsync(PedidoSAPB1 pedido)
+    {
+        if (pedido is null)
+            throw new ArgumentException("El cuerpo del pedido es obligatorio.");
+
+        if (string.IsNullOrWhiteSpace(pedido.CardCode))
+            throw new ArgumentException("El CardCode es obligatorio.");
+
+        if (pedido.DocDueDate == default)
+            throw new ArgumentException("La fecha de entrega es obligatoria.");
+
+        if (pedido.DocumentLines is not [var linea])
+            throw new ArgumentException("El pedido debe incluir una sola línea.");
+
+        if (string.IsNullOrWhiteSpace(linea.ItemCode))
+            throw new ArgumentException("El ItemCode es obligatorio.");
+
+        if (linea.Quantity <= 0)
+            throw new ArgumentException("La cantidad debe ser mayor que cero.");
+
+        if (linea.UnitPrice < 0)
+            throw new ArgumentException("El precio no puede ser negativo.");
+
+        pedido.CardCode = pedido.CardCode.Trim();
+        linea.ItemCode = linea.ItemCode.Trim();
+
+        await AsegurarSesionAsync();
+
+        var orden = await _conexion.Request("Orders").PostAsync<OrdersSAPB1>(pedido); //POSTEO UTILIZANDO B1SLayer
+
+        if (orden is null)
+            throw new InvalidOperationException("Service Layer no devolvió el pedido creado.");
+
+        return new ConsultaOrden("POST", "Orders", orden);
+    }
+
     public async Task<ConsultaSocios> ObtenerClientesAsync(int tamanoPagina)
     {
         if (tamanoPagina is < 1 or > 100)

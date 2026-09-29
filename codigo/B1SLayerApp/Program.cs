@@ -1,4 +1,5 @@
 using B1SLayer;
+using B1SLayerApp.Modelos;
 using B1SLayerApp.Servicios;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,18 @@ app.MapGet("/api/ordenes/{docEntry:int}", async (int docEntry, ServicioSap sap) 
     try
     {
         return Results.Ok(await sap.ObtenerOrdenAsync(docEntry));
+    }
+    catch (Exception ex)
+    {
+        return ErrorSap(ex);
+    }
+});
+
+app.MapPost("/api/ordenes", async (PedidoSAPB1 pedido, ServicioSap sap) =>
+{
+    try
+    {
+        return Results.Ok(await sap.CrearOrdenAsync(pedido));
     }
     catch (Exception ex)
     {

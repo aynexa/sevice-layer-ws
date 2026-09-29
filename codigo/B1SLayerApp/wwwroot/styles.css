@@ -140,6 +140,22 @@ form {
   align-items: end;
 }
 
+.form-pedido {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: end;
+}
+
+.form-pedido label {
+  width: auto;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.form-pedido input { width: 100%; }
+
+.form-pedido button { min-height: 2.45rem; }
+
 label {
   width: 100%;
   font-size: 0.85rem;
