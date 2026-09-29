@@ -53,6 +53,18 @@ app.MapPost("/api/ordenes", async (PedidoSAPB1 pedido, ServicioSap sap) =>
     }
 });
 
+app.MapPost("/api/facturas", async (SolicitudFacturaConPago solicitud, ServicioSap sap) =>
+{
+    try
+    {
+        return Results.Ok(await sap.FacturarEntregaConPagoAsync(solicitud));
+    }
+    catch (Exception ex)
+    {
+        return ErrorSap(ex);
+    }
+});
+
 app.MapGet("/api/socios", async (int? tamano, ServicioSap sap) =>
 {
     try

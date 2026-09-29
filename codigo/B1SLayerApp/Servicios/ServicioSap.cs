@@ -1,3 +1,5 @@
+using System.Net.Http;
+using System.Text.Json;
 using B1SLayer;
 using B1SLayerApp.Modelos;
 using Microsoft.Extensions.Options;
@@ -15,6 +17,20 @@ public sealed class ConexionSapOptions
 public sealed record ResultadoSesion(string SessionId, string Usuario, string CompanyDb, string ServiceLayerUrl);
 
 public sealed record ConsultaOrden(string Metodo, string Recurso, OrdersSAPB1 Orden);
+
+public sealed record DocumentoCreado(int DocEntry, int DocNum, string CardCode, decimal DocTotal);
+
+public sealed record ResultadoFacturaConPago(
+    string Metodo,
+    string Recurso,
+    bool ChangeSetUnico,
+    int DocEntryEntrega,
+    decimal TotalEntrega,
+    string CashAccount,
+    string FacturaEnviada,
+    string PagoEnviado,
+    DocumentoCreado Factura,
+    DocumentoCreado Pago);
 
 public sealed record ConsultaSocios(
     string Metodo,
@@ -124,6 +140,187 @@ public sealed class ServicioSap
             throw new InvalidOperationException("Service Layer no devolvió el pedido creado.");
 
         return new ConsultaOrden("POST", "Orders", orden);
+    }
+
+    public async Task<ResultadoFacturaConPago> FacturarEntregaConPagoAsync(SolicitudFacturaConPago solicitud)
+    {
+        if (solicitud is null)
+            throw new ArgumentException("El cuerpo de la factura es obligatorio.");
+
+        if (solicitud.DocEntryEntrega <= 0)
+            throw new ArgumentException("El DocEntry de la entrega debe ser mayor que cero.");
+
+        if (string.IsNullOrWhiteSpace(solicitud.CardCode))
+            throw new ArgumentException("El CardCode es obligatorio.");
+
+        if (solicitud.DocDueDate == default)
+            throw new ArgumentException("La fecha de vencimiento de la factura es obligatoria.");
+
+        if (solicitud.DocDate == default)
+            throw new ArgumentException("La fecha del pago es obligatoria.");
+
+        if (string.IsNullOrWhiteSpace(solicitud.CashAccount))
+            throw new ArgumentException("La cuenta de efectivo es obligatoria.");
+
+        var cardCode = solicitud.CardCode.Trim();
+        var cuenta = solicitud.CashAccount.Trim();
+
+        await AsegurarSesionAsync();
+
+        var entrega = await _conexion.Request("DeliveryNotes", solicitud.DocEntryEntrega).GetAsync<EntregaSAPB1>();
+        if (entrega is null)
+            throw new InvalidOperationException($"No se encontró la entrega {solicitud.DocEntryEntrega}.");
+
+        if (!string.Equals(entrega.CardCode, cardCode, StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException($"La entrega {entrega.DocEntry} pertenece a {entrega.CardCode}.");
+
+        if (entrega.DocTotal <= 0)
+            throw new InvalidOperationException("La entrega no tiene un total para facturar y cobrar.");
+
+        var lineas = LineasPorElTotalDeLaEntrega(entrega);
+        var factura = new FacturaSAPB1
+        {
+            CardCode = entrega.CardCode,
+            DocDueDate = solicitud.DocDueDate.Date,
+            DocumentLines = lineas
+        };
+        var pagoJson = JsonPago(entrega.CardCode, solicitud.DocDate.Date, entrega.DocTotal, cuenta, ContenidoFactura);
+        var facturaJson = JsonSerializer.Serialize(factura);
+
+        const bool changeSetUnico = true;
+        var solicitudFactura = new SLBatchRequest(HttpMethod.Post, "Invoices", factura, ContenidoFactura);
+        var solicitudPago = new SLBatchRequest(HttpMethod.Post, "IncomingPayments", pagoJson, ContenidoPago);
+
+        HttpResponseMessage[] respuestas;
+        try
+        {
+            respuestas = await _conexion.PostBatchAsync([solicitudFactura, solicitudPago], changeSetUnico);
+        }
+        catch (SLException ex)
+        {
+            throw new InvalidOperationException($"El changeset se revirtió y la factura no quedó creada. {ex.Message}");
+        }
+
+        if (respuestas.Length < 2 || respuestas.Any(respuesta => !respuesta.IsSuccessStatusCode))
+        {
+            var cuerpo = respuestas.Length == 0
+                ? "Service Layer no devolvió el batch."
+                : string.Join(" ", await Task.WhenAll(respuestas.Select(TextoRespuestaAsync)));
+            throw new InvalidOperationException($"El changeset se revirtió y la factura no quedó creada. {MensajeSap(cuerpo)}");
+        }
+
+        var facturaCreada = LeerDocumento(await TextoRespuestaAsync(respuestas[0]), esPago: false);
+        var pagoCreado = LeerDocumento(await TextoRespuestaAsync(respuestas[1]), esPago: true);
+
+        return new ResultadoFacturaConPago(
+            "POST",
+            "$batch",
+            changeSetUnico,
+            entrega.DocEntry,
+            entrega.DocTotal,
+            cuenta,
+            facturaJson,
+            pagoJson,
+            facturaCreada,
+            pagoCreado);
+    }
+
+    private const int TipoDocumentoEntrega = 15;
+    private const int ContenidoFactura = 1;
+    private const int ContenidoPago = 2;
+    private const string ImpuestoPorDefecto = "I18";
+
+    private static List<LineaFacturaSAPB1> LineasPorElTotalDeLaEntrega(EntregaSAPB1 entrega)
+    {
+        var lineas = (entrega.DocumentLines ?? [])
+            .Where(linea => !string.Equals(linea.LineStatus, "bost_Close", StringComparison.Ordinal))
+            .Select(linea => new LineaFacturaSAPB1
+            {
+                ItemCode = linea.ItemCode,
+                Quantity = linea.RemainingOpenQuantity > 0 ? linea.RemainingOpenQuantity : linea.Quantity,
+                TaxCode = string.IsNullOrWhiteSpace(linea.TaxCode) ? ImpuestoPorDefecto : linea.TaxCode,
+                BaseType = TipoDocumentoEntrega,
+                BaseEntry = entrega.DocEntry,
+                BaseLine = linea.LineNum
+            })
+            .Where(linea => !string.IsNullOrWhiteSpace(linea.ItemCode) && linea.Quantity > 0)
+            .ToList();
+
+        if (lineas.Count == 0)
+            throw new InvalidOperationException($"La entrega {entrega.DocEntry} no tiene líneas abiertas para facturar.");
+
+        return lineas;
+    }
+
+    private static string JsonPago(string cardCode, DateTime docDate, decimal total, string cashAccount, int contenidoFactura)
+    {
+        var monto = JsonSerializer.Serialize(total);
+        return $$"""
+        {
+          "CardCode": {{JsonSerializer.Serialize(cardCode)}},
+          "DocDate": "{{docDate:yyyy-MM-dd}}",
+          "CashSum": {{monto}},
+          "CashAccount": {{JsonSerializer.Serialize(cashAccount)}},
+          "PaymentInvoices": [
+            {
+              "DocEntry": ${{contenidoFactura}},
+              "SumApplied": {{monto}},
+              "InvoiceType": "it_Invoice"
+            }
+          ]
+        }
+        """;
+    }
+
+    private static async Task<string> TextoRespuestaAsync(HttpResponseMessage respuesta)
+        => respuesta.Content is null ? string.Empty : await respuesta.Content.ReadAsStringAsync();
+
+    private static DocumentoCreado LeerDocumento(string cuerpo, bool esPago)
+    {
+        using var documento = JsonDocument.Parse(CuerpoJson(cuerpo));
+        var raiz = documento.RootElement;
+        var total = esPago
+            ? LeerDecimal(raiz, "CashSum")
+            : LeerDecimal(raiz, "DocTotal");
+
+        return new DocumentoCreado(
+            raiz.GetProperty("DocEntry").GetInt32(),
+            raiz.TryGetProperty("DocNum", out var numero) ? numero.GetInt32() : 0,
+            raiz.TryGetProperty("CardCode", out var cliente) ? cliente.GetString() ?? string.Empty : string.Empty,
+            total);
+    }
+
+    private static decimal LeerDecimal(JsonElement raiz, string propiedad)
+        => raiz.TryGetProperty(propiedad, out var valor) ? valor.GetDecimal() : 0;
+
+    private static string CuerpoJson(string texto)
+    {
+        var inicio = texto.IndexOf('{');
+        var fin = texto.LastIndexOf('}');
+        if (inicio < 0 || fin < inicio)
+            return texto.Trim();
+
+        return texto[inicio..(fin + 1)];
+    }
+
+    private static string MensajeSap(string cuerpo)
+    {
+        try
+        {
+            using var documento = JsonDocument.Parse(CuerpoJson(cuerpo));
+            if (documento.RootElement.TryGetProperty("error", out var error)
+                && error.TryGetProperty("message", out var mensaje)
+                && mensaje.TryGetProperty("value", out var valor)
+                && !string.IsNullOrWhiteSpace(valor.GetString()))
+            {
+                return valor.GetString()!;
+            }
+        }
+        catch (JsonException)
+        {
+        }
+
+        return string.IsNullOrWhiteSpace(cuerpo) ? "Service Layer rechazó el batch." : cuerpo.Trim();
     }
 
     public async Task<ConsultaSocios> ObtenerClientesAsync(int tamanoPagina)

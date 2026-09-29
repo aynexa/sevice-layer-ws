@@ -118,6 +118,35 @@
       <p class="vacio" id="vacio-socios" hidden>Service Layer no devolvió clientes con ese filtro.</p>
       <p class="error" id="error-socios" hidden></p>
     </section>
+
+    <section class="tarjeta">
+      <header>
+        <p class="paso">Paso 5</p>
+        <h2>Facturar la entrega y cobro en efectivo</h2>
+      </header>
+      <p class="ayuda">Igual que <code>PostBatchAsync(..., singleChangeSet: true)</code>. La factura copia el total de la entrega 10956 (<code>BaseType</code> 15) y el pago la referencia con <code>$1</code>. Si el pago falla, el changeset revierte la factura.</p>
+      <form id="form-factura" class="form-pedido">
+        <label for="entrega-entry">Entrega
+          <input id="entrega-entry" name="docEntryEntrega" type="number" min="1" value="10956" required />
+        </label>
+        <label for="factura-card">Cliente
+          <input id="factura-card" name="cardCode" value="C000001" required />
+        </label>
+        <label for="factura-vence">Vencimiento
+          <input id="factura-vence" name="docDueDate" type="date" value="2026-09-30" required />
+        </label>
+        <label for="pago-fecha">Fecha del pago
+          <input id="pago-fecha" name="docDate" type="date" value="2026-09-25" required />
+        </label>
+        <label for="cuenta-caja">Cuenta de efectivo
+          <input id="cuenta-caja" name="cashAccount" value="1011102" required />
+        </label>
+        <button type="submit">Facturar y cobrar</button>
+      </form>
+      <p class="recurso" id="recurso-factura" hidden></p>
+      <dl class="datos" id="datos-factura" hidden></dl>
+      <p class="error" id="error-factura" hidden></p>
+    </section>
   </main>
 
   <script src="app.js"></script>

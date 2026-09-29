@@ -217,6 +217,57 @@ document.querySelector("#form-pedido").addEventListener("submit", async (evento)
   }
 });
 
+function pintarFactura(resultado) {
+  const campos = [
+    ["Entrega", resultado.docEntryEntrega],
+    ["Total entrega", monto(resultado.totalEntrega)],
+    ["Cuenta", resultado.cashAccount],
+    ["Factura DocEntry", resultado.factura.docEntry],
+    ["Factura DocNum", resultado.factura.docNum],
+    ["Pago DocEntry", resultado.pago.docEntry],
+    ["Pago DocNum", resultado.pago.docNum],
+    ["Cobrado", monto(resultado.pago.docTotal)]
+  ];
+  const lista = document.querySelector("#datos-factura");
+  lista.replaceChildren();
+  for (const [titulo, valor] of campos) {
+    const bloque = document.createElement("div");
+    const etiqueta = document.createElement("dt");
+    const dato = document.createElement("dd");
+    etiqueta.textContent = titulo;
+    dato.textContent = valor ?? "—";
+    bloque.append(etiqueta, dato);
+    lista.append(bloque);
+  }
+  lista.hidden = false;
+  const recurso = document.querySelector("#recurso-factura");
+  recurso.hidden = false;
+  recurso.textContent = `${resultado.metodo} ${resultado.recurso}\nchangeset único: ${resultado.changeSetUnico}\n\n${resultado.facturaEnviada}\n\n${resultado.pagoEnviado}`;
+}
+
+document.querySelector("#form-factura").addEventListener("submit", async (evento) => {
+  evento.preventDefault();
+  const boton = evento.currentTarget.querySelector("button");
+  ocupar(boton, true);
+  mostrarError("#error-factura", "");
+  const solicitud = {
+    docEntryEntrega: Number(document.querySelector("#entrega-entry").value),
+    cardCode: document.querySelector("#factura-card").value,
+    docDueDate: document.querySelector("#factura-vence").value,
+    docDate: document.querySelector("#pago-fecha").value,
+    cashAccount: document.querySelector("#cuenta-caja").value
+  };
+  try {
+    pintarFactura(await enviar("/api/facturas", solicitud));
+  } catch (error) {
+    document.querySelector("#datos-factura").hidden = true;
+    document.querySelector("#recurso-factura").hidden = true;
+    mostrarError("#error-factura", mensajeDeRed(error));
+  } finally {
+    ocupar(boton, false);
+  }
+});
+
 document.querySelector("#form-socios").addEventListener("submit", async (evento) => {
   evento.preventDefault();
   const boton = evento.currentTarget.querySelector("button");
