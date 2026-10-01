@@ -1,0 +1,581 @@
+{
+  "info": {
+    "_postman_id": "4f60740f-06b6-43c1-a0c3-17b500ee189d",
+    "name": "Service Layer",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "19378965",
+    "_collection_link": "https://go.postman.co/collection/19378965-4f60740f-06b6-43c1-a0c3-17b500ee189d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Socios de negocio",
+      "item": [
+        {
+          "name": "Creacion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"CardCode\": \"C000001\",\r\n    \"CardName\": \"CLIENTE DE PRUEBA\",\r\n    \"CardType\": \"cCustomer\",\r\n    \"FederalTaxID\": \"76123456-7\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/BusinessPartners",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "BusinessPartners"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizacion",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"CardName\": \"CLIENTE DE PRUEBA - updated\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/BusinessPartners('C000001')",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "BusinessPartners('C000001')"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Articulos",
+      "item": [
+        {
+          "name": "Creacion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"ItemCode\": \"ITEM000001\",\r\n    \"ItemName\": \"ARTICULO DE PRUEBA\",\r\n    \"ItemType\": \"itItems\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/Items",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "Items"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizacion",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"ItemName\": \"ARTICULO DE PRUEBA\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/Items('ITEM000001')",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "Items('ITEM000001')"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ventas",
+      "item": [
+        {
+          "name": "Pedido",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"CardCode\": \"C000001\",\r\n    \"DocDueDate\": \"2026-09-30\",\r\n    \"DocumentLines\": [\r\n        {\r\n            \"ItemCode\": \"ITEM000001\",\r\n            \"Quantity\": 10,\r\n            \"UnitPrice\": 15.00\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/Orders",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "Orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Entrega",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"CardCode\": \"C000001\",\r\n    \"DocDueDate\": \"2026-09-30\",\r\n    \"DocumentLines\": [\r\n        {\r\n            \"ItemCode\": \"ITEM000001\",\r\n            \"Quantity\": 5,\r\n            \"BaseType\": 17, //relacionan con el documento anterior (base) - Tipo de documento\r\n            \"BaseEntry\": 50528, //relacionan con el documento anterior (base) - ID de documento\r\n            \"BaseLine\": 0 //relacionan con el documento anterior (base) - ID de línea del documento\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/DeliveryNotes",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "DeliveryNotes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Factura",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"CardCode\": \"C000001\",\r\n    \"DocDueDate\": \"2026-09-30\",\r\n    \"DocumentLines\": [\r\n        {\r\n            \"ItemCode\": \"ITEM000001\",\r\n            \"Quantity\": 5,\r\n            \"TaxCode\": \"I18\",\r\n            \"BaseType\": 15, //relacionan con el documento anterior (base) - Tipo de documento\r\n            \"BaseEntry\": 10954, //relacionan con el documento anterior (base) - ID de documento\r\n            \"BaseLine\": 0 //relacionan con el documento anterior (base) - ID de línea del documento\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/Invoices",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "Invoices"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pago recibido - Bancos - Efectivo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"CardCode\": \"C000001\",\r\n    \"DocDate\": \"2026-09-25\",\r\n    \"CashSum\": 88.50, //monto total recibido\r\n    \"CashAccount\": \"1011102\",\r\n    \"PaymentInvoices\": [\r\n        {\r\n            \"DocEntry\": 363745,\r\n            \"SumApplied\": 88.50, //cuanto de la factura estás pagando\r\n            \"InvoiceType\": \"it_Invoice\"\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/IncomingPayments",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "IncomingPayments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pago recibido - Bancos Anulacion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/IncomingPayments(82948)/Cancel",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "IncomingPayments(82948)",
+                "Cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pago recibido - Bancos Transferencia",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"CardCode\": \"C000001\",\r\n    \"DocDate\": \"2026-09-25\",\r\n    \"TransferSum\": 88.50,\r\n    \"TransferAccount\": \"1041101\",\r\n    \"TransferDate\": \"2026-09-25\",\r\n    \"TransferReference\": \"TRX-000001\",\r\n    \"PaymentInvoices\": [\r\n        {\r\n            \"DocEntry\": 363745,\r\n            \"SumApplied\": 88.50,\r\n            \"InvoiceType\": \"it_Invoice\"\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/IncomingPayments",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "IncomingPayments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pago recibido - Bancos - Cheque",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"CardCode\": \"C000001\",\r\n    \"DocDate\": \"2026-09-25\",\r\n    \"CheckAccount\": \"104102\",\r\n    \"PaymentChecks\": [\r\n        {\r\n            \"CheckNumber\": 123456,\r\n            \"BankCode\": \"001\",\r\n            \"CheckSum\": 150.00,\r\n            \"DueDate\": \"2026-09-25\",\r\n            \"CountryCode\": \"PE\"\r\n        }\r\n    ],\r\n    \"PaymentInvoices\": [\r\n        {\r\n            \"DocEntry\": 789,\r\n            \"SumApplied\": 150.00,\r\n            \"InvoiceType\": \"it_Invoice\"\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/IncomingPayments",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "IncomingPayments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pago recibido - Bancos - Tarjetas de credito",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"CardCode\": \"C000001\",\r\n    \"DocDate\": \"2026-09-25\",\r\n    \"PaymentCreditCards\": [\r\n        {\r\n            \"CreditCard\": 1, //key de la tarjeta de crédito (consultar por bd cual es ese id)\r\n            \"CreditCardNumber\": \"************1234\",\r\n            \"CardValidUntil\": \"2027-12-31\",\r\n            \"VoucherNum\": \"VOUCHER-000001\",\r\n            \"OwnerIdNum\": \"C000001\",\r\n            \"PaymentMethodCode\": 1,\r\n            \"CreditSum\": 150.00\r\n        }\r\n    ],\r\n    \"PaymentInvoices\": [\r\n        {\r\n            \"DocEntry\": 789,\r\n            \"SumApplied\": 150.00,\r\n            \"InvoiceType\": \"it_Invoice\"\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://192.168.1.14:50000/b1s/v1/IncomingPayments",
+              "protocol": "https",
+              "host": [
+                "192",
+                "168",
+                "1",
+                "14"
+              ],
+              "port": "50000",
+              "path": [
+                "b1s",
+                "v1",
+                "IncomingPayments"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Query Options",
+      "item": [
+        {
+          "name": "Busquedas relacionadas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "B1S-ReplaceCollectionsOnPatch",
+            "value": "true",
+            "disabled": true
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"CompanyDB\": \"B1H_LAZZOS_PROD2503\",\r\n    \"Password\": \"sbosap\",\r\n    \"UserName\": \"dev\",\r\n    \"Language\": 25 // español - latinoamerica\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://192.168.1.14:50000/b1s/v1/Login",
+          "protocol": "https",
+          "host": [
+            "192",
+            "168",
+            "1",
+            "14"
+          ],
+          "port": "50000",
+          "path": [
+            "b1s",
+            "v1",
+            "Login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Pedidos SAP (Todos x lote de 20)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://192.168.1.14:50000/b1s/v1/Orders",
+          "protocol": "https",
+          "host": [
+            "192",
+            "168",
+            "1",
+            "14"
+          ],
+          "port": "50000",
+          "path": [
+            "b1s",
+            "v1",
+            "Orders"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Consulta de Pedido por ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://192.168.1.14:50000/b1s/v1/Orders(3444)",
+          "protocol": "https",
+          "host": [
+            "192",
+            "168",
+            "1",
+            "14"
+          ],
+          "port": "50000",
+          "path": [
+            "b1s",
+            "v1",
+            "Orders(3444)"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filtros",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": ""
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Socios de Negocio",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"CardCode\": \"CL17803766\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://192.168.1.14:50000/b1s/v1/BusinessPartners('CL17803745')",
+          "protocol": "https",
+          "host": [
+            "192",
+            "168",
+            "1",
+            "14"
+          ],
+          "port": "50000",
+          "path": [
+            "b1s",
+            "v1",
+            "BusinessPartners('CL17803745')"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": ""
+        }
+      },
+      "response": []
+    }
+  ]
+}
